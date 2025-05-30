@@ -3,17 +3,11 @@
 import XCTest
 import ChronoLock
 
-extension ChronoLock {
-    func encryptAndSave(file inputURL: URL, until date: Date, outputURL: URL) throws {
-        let _ = try reader.read(inputURL)
-        try persister.save(Data(), at: outputURL)
-    }
-}
 extension ChronoLockTests {
     func test_encryptAndSave_deliversErrorOnReadError() throws {
         struct ReaderStub: ChronoLock.Reader {
             let error: Error
-            func read(_ fileURL: URL) throws -> String {
+            func read(_ fileURL: URL) throws -> Data {
                 throw error
             }
         }
@@ -27,6 +21,9 @@ extension ChronoLockTests {
     func test_encryptAndSave_deliversErrorOnSaveError() throws {
         struct PersisterStub: ChronoLock.Persister {
             let error: Error
+            func save(_ content: String, at outputURL: URL) throws {
+                throw error
+            }
             func save(_ data: Data, at outputURL: URL) throws {
                 throw error
             }

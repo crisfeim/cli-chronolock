@@ -20,11 +20,12 @@ extension ChronoLockTests {
     }
     
     struct ReaderDummy: ChronoLock.Reader {
-        func read(_ fileURL: URL) throws -> String {""}
+        func read(_ fileURL: URL) throws -> Data {Data()}
     }
     
     struct PersisterDummy: ChronoLock.Persister {
         func save(_ data: Data, at outputURL: URL) throws {}
+        func save(_ content: String, at outputURL: URL) throws {}
     }
 }
 
