@@ -9,10 +9,12 @@ class ChronoLockTests: XCTestCase {
             func encrypt<T: Codable>(_ codableObject: T) throws -> Data
         }
         
+        struct AlreadyEllapsedDateError: Error {}
         
         let encryptor: Encryptor
         func encrypt(_ content: String, until date: Date) throws -> Data {
-            try encryptor.encrypt(content)
+            guard date > Date() else { throw AlreadyEllapsedDateError()}
+            return try encryptor.encrypt(content)
         }
     }
     
@@ -29,6 +31,21 @@ class ChronoLockTests: XCTestCase {
         XCTAssertThrowsError(try sut.encrypt("any message", until: Date()))
     }
     
+    func test_encrypt_deliversErrorOnAlreadyEllapsedDate() throws {
+        let alreadyElapsedDate = Date().substracting(seconds: 1)
+        struct EncryptorDummy: ChronoLock.Encryptor {
+            func encrypt<T: Codable>(_ codableObject: T) throws -> Data {
+                Data()
+            }
+        }
+        
+        let encryptor = EncryptorDummy()
+        let sut = ChronoLock(encryptor: encryptor)
+        
+        XCTAssertThrowsError(try sut.encrypt("any message", until: alreadyElapsedDate)) { error in
+            XCTAssertTrue(error is ChronoLock.AlreadyEllapsedDateError)
+        }
+    }
 }
 
 private extension ChronoLockTests {
@@ -37,3 +54,8 @@ private extension ChronoLockTests {
     }
 }
 
+private extension Date {
+    func substracting(seconds: TimeInterval) -> Date {
+        return self - seconds
+    }
+}
