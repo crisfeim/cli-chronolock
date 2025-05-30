@@ -36,12 +36,7 @@ class ChronoLockTests: XCTestCase {
     func test_encrypt_deliversErrorOnAlreadyEllapsedDate() throws {
         
         let timestamp = Date()
-        let alreadyElapsedDate = timestamp.substracting(seconds: 1)
-        struct EncryptorDummy: ChronoLock.Encryptor {
-            func encrypt<T: Codable>(_ codableObject: T) throws -> Data {
-                Data()
-            }
-        }
+        let alreadyElapsedDate = timestamp.adding(seconds: -1)
         
         let encryptor = EncryptorDummy()
         let sut = ChronoLock(encryptor: encryptor, currentDate: {timestamp})
@@ -50,16 +45,34 @@ class ChronoLockTests: XCTestCase {
             XCTAssertTrue(error is ChronoLock.AlreadyEllapsedDateError)
         }
     }
+    
+    func test_encrypt_deliversNoErrorOnNonEllapsedDateAndEncryptorSuccess() throws {
+        
+        let timestamp = Date()
+        let nonEllapsedDate = timestamp.adding(seconds: 1)
+         
+        let encryptor = EncryptorDummy()
+        let sut = ChronoLock(encryptor: encryptor, currentDate: {timestamp})
+        
+        XCTAssertNoThrow(try sut.encrypt("any message", until: nonEllapsedDate))
+    }
 }
 
+// MARK: - Helpers
 private extension ChronoLockTests {
+    struct EncryptorDummy: ChronoLock.Encryptor {
+        func encrypt<T: Codable>(_ codableObject: T) throws -> Data {
+            Data()
+        }
+    }
+    
     func anyError() -> NSError {
         NSError(domain: "any error", code: 0)
     }
 }
 
 private extension Date {
-    func substracting(seconds: TimeInterval) -> Date {
-        return self - seconds
+    func adding(seconds: TimeInterval) -> Date {
+        return self + seconds
     }
 }
