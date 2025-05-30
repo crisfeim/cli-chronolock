@@ -97,9 +97,3 @@ private extension ChronoLockTests {
     }
     
 }
-
-private extension Date {
-    func adding(seconds: TimeInterval) -> Date {
-        return self + seconds
-    }
-}

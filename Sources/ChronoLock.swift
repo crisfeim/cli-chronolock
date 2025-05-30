@@ -40,8 +40,7 @@ public struct ChronoLock {
    public func encrypt(_ content: String, until date: Date) throws -> Data {
         guard date > Date() else { throw AlreadyEllapsedDateError()}
         let item = Item(unlockDate: date, content: content)
-        let encoded = try JSONEncoder().encode(item)
-        return try encryptor.encrypt(encoded)
+        return try encryptor.encrypt(item)
     }
     
     public func decrypt(_ data: Data) throws -> String {
