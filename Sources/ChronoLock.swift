@@ -24,16 +24,22 @@ public struct ChronoLock {
         func decrypt<T: Decodable>(_ data: Data) throws -> T
     }
     
+    public protocol Reader {
+        func read(_ fileURL: URL) throws -> String
+    }
+    
     public struct AlreadyEllapsedDateError: Error {}
     public struct NonEllapsedDateError: Error {}
     
     let encryptor: Encryptor
     let decryptor: Decryptor
+    public let reader: Reader
     let currentDate: () -> Date
     
-    public init(encryptor: Encryptor, decryptor: Decryptor, currentDate: @escaping () -> Date) {
+    public init(encryptor: Encryptor, decryptor: Decryptor, reader: Reader, currentDate: @escaping () -> Date) {
         self.encryptor = encryptor
         self.decryptor = decryptor
+        self.reader = reader
         self.currentDate = currentDate
     }
     

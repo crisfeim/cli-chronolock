@@ -18,15 +18,23 @@ extension ChronoLockTests {
             return ChronoLock.Item(unlockDate: Date(), content: "any content") as! T
         }
     }
+    
+    struct ReaderDummy: ChronoLock.Reader {
+        func read(_ fileURL: URL) throws -> String {""}
+    }
 }
 
 // MARK: - Factories
 extension ChronoLockTests {
-    func makeSUT(encryptor: ChronoLock.Encryptor = EncryptorDummy(), decryptor: ChronoLock.Decryptor = DecryptorDummy(), currentDate: @escaping () -> Date = Date.init) -> ChronoLock {
-       ChronoLock(encryptor: encryptor, decryptor: decryptor, currentDate: currentDate)
+    func makeSUT(encryptor: ChronoLock.Encryptor = EncryptorDummy(), decryptor: ChronoLock.Decryptor = DecryptorDummy(), reader: ChronoLock.Reader = ReaderDummy(), currentDate: @escaping () -> Date = Date.init) -> ChronoLock {
+        ChronoLock(encryptor: encryptor, decryptor: decryptor, reader: reader, currentDate: currentDate)
     }
     
     func anyError() -> NSError {
         NSError(domain: "any error", code: 0)
     }
+    
+    func anyDate() -> Date {
+        Date()
+    } 
 }

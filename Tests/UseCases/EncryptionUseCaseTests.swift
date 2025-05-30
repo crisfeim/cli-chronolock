@@ -40,11 +40,3 @@ class ChronoLockTests: XCTestCase {
         XCTAssertNoThrow(try sut.encrypt("any message", until: nonEllapsedDate))
     }
 }
-
-// MARK: - Helpers
-private extension ChronoLockTests {
-
-    func anyDate() -> Date {
-        Date()
-    }
-}
