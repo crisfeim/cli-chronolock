@@ -37,20 +37,19 @@ class ChronoLockTests: XCTestCase {
             }
         }
         let encryptor = EncryptorStub(error: anyError())
-        let sut = ChronoLock(encryptor: encryptor, decryptor: DecryptorDummy(), currentDate: { Date() })
+        let sut = makeSUT(encryptor: encryptor)
         
-        XCTAssertThrowsError(try sut.encrypt("any message", until: Date()))
+        XCTAssertThrowsError(try sut.encrypt("any message", until: anyDate()))
     }
     
     func test_encrypt_deliversErrorOnAlreadyEllapsedDate() throws {
         
         let timestamp = Date()
-        let alreadyElapsedDate = timestamp.adding(seconds: -1)
+        let alreadyEllapsedDate = timestamp.adding(seconds: -1)
         
-        let encryptor = EncryptorDummy()
-        let sut = ChronoLock(encryptor: encryptor, decryptor: DecryptorDummy(), currentDate: {timestamp})
+        let sut = makeSUT(currentDate: {timestamp})
         
-        XCTAssertThrowsError(try sut.encrypt("any message", until: alreadyElapsedDate)) { error in
+        XCTAssertThrowsError(try sut.encrypt("any message", until: alreadyEllapsedDate)) { error in
             XCTAssertTrue(error is ChronoLock.AlreadyEllapsedDateError)
         }
     }
@@ -60,8 +59,7 @@ class ChronoLockTests: XCTestCase {
         let timestamp = Date()
         let nonEllapsedDate = timestamp.adding(seconds: 1)
          
-        let encryptor = EncryptorDummy()
-        let sut = ChronoLock(encryptor: encryptor, decryptor: DecryptorDummy(), currentDate: {timestamp})
+        let sut = makeSUT(currentDate: {timestamp})
         
         XCTAssertNoThrow(try sut.encrypt("any message", until: nonEllapsedDate))
     }
@@ -75,10 +73,9 @@ class ChronoLockTests: XCTestCase {
             }
         }
         
-        let encryptor = EncryptorDummy()
         let decryptor = DecryptorStub(error: anyError())
         
-        let sut = ChronoLock(encryptor: encryptor, decryptor: decryptor, currentDate: Date.init)
+        let sut = makeSUT(decryptor: decryptor)
         let anyEncryptedData = Data()
         XCTAssertThrowsError(try sut.decrypt(anyEncryptedData))
     }
@@ -86,6 +83,11 @@ class ChronoLockTests: XCTestCase {
 
 // MARK: - Helpers
 private extension ChronoLockTests {
+    
+    func makeSUT(encryptor: ChronoLock.Encryptor = EncryptorDummy(), decryptor: ChronoLock.Decryptor = DecryptorDummy(), currentDate: @escaping () -> Date = Date.init) -> ChronoLock {
+       ChronoLock(encryptor: encryptor, decryptor: decryptor, currentDate: currentDate)
+    }
+    
     struct EncryptorDummy: ChronoLock.Encryptor {
         func encrypt<T: Codable>(_ codableObject: T) throws -> Data {
             Data()
@@ -101,6 +103,10 @@ private extension ChronoLockTests {
     
     func anyError() -> NSError {
         NSError(domain: "any error", code: 0)
+    }
+    
+    func anyDate() -> Date {
+        Date()
     }
 }
 
