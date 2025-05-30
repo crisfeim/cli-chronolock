@@ -20,4 +20,11 @@ class IntegrationTests: XCTestCase {
         let decryptedMessage = try sut2.decrypt(encrypted)
         XCTAssertEqual(decryptedMessage, "any message to encrypt")
     }
+    
+    func test_decrypt_failsOnInvalidData() throws {
+        let encryptor = Encryptor(passphrase: "passphrase")
+        let sut = ChronoLock(encryptor: encryptor, decryptor: encryptor, currentDate: Date.init)
+        let invalidData = Data()
+        XCTAssertThrowsError(try sut.decrypt(invalidData))
+    }
 }
