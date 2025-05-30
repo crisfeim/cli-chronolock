@@ -9,7 +9,6 @@ class ChronoLockTests: XCTestCase {
         let passphrase: String
         
         private var key: SymmetricKey {
-            let passphrase = "ChronoLockKey123"
             let keyData = SHA256.hash(data: Data(passphrase.utf8))
             return SymmetricKey(data: keyData)
         }
@@ -41,5 +40,12 @@ class ChronoLockTests: XCTestCase {
         let encrypted = try sut1.encrypt("hello world")
         let decrypted = try sut2.decrypt(encrypted)
         XCTAssertEqual(decrypted, "hello world")
+    }
+    
+    func test_encryptAndDecrypt_withDifferentInstancesAndDifferentPassPhrase_failsDecryption() throws {
+        let sut1 = Encryptor(passphrase: "test phrase 1")
+        let sut2 = Encryptor(passphrase: "test phrase 2 any freaking passphrase")
+        let encrypted = try sut1.encrypt("hello world")
+        XCTAssertThrowsError(try sut2.decrypt(encrypted))
     }
 }
