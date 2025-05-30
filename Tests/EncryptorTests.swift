@@ -3,7 +3,7 @@
 import XCTest
 import CryptoKit
 
-class ChronoLockTests: XCTestCase {
+class EncryptorTests: XCTestCase {
     
     struct Encryptor {
         let passphrase: String
@@ -60,7 +60,7 @@ class ChronoLockTests: XCTestCase {
     }
 }
 
-private extension ChronoLockTests {
+private extension EncryptorTests {
     struct AnyCodableObject: Codable, Equatable {
         let message: String
     }
