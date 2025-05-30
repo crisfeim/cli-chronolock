@@ -33,4 +33,13 @@ class ChronoLockTests: XCTestCase {
         let decrypted = try sut.decrypt(encrypted)
         XCTAssertEqual(decrypted, "hello world")
     }
+    
+    func test_encryptAndDecrypt_withDifferentInstancesAndSamePassphrase_returnsOriginalMessage() throws {
+        let passphrase = "test phrase"
+        let sut1 = Encryptor(passphrase: passphrase)
+        let sut2 = Encryptor(passphrase: passphrase)
+        let encrypted = try sut1.encrypt("hello world")
+        let decrypted = try sut2.decrypt(encrypted)
+        XCTAssertEqual(decrypted, "hello world")
+    }
 }
