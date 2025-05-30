@@ -26,11 +26,21 @@ class ChronoLockTests: XCTestCase {
         }
         
         func encrypt<T: Codable>(_ codableObject: T) throws -> Data {
-            Data()
+            let encoded = try JSONEncoder().encode(codableObject)
+            let sealedBox = try AES.GCM.seal(encoded, using: key)
+            guard let combined = sealedBox.combined else {
+                throw CombinedEncodingError()
+            }
+            return combined
         }
         
-        func decrypt<T>(_ data: Data) throws -> T {
-            throw NSError(domain: "any error", code: 0)
+        struct CombinedEncodingError: Error {}
+        
+        func decrypt<T: Codable>(_ data: Data) throws -> T {
+            let sealedBox = try AES.GCM.SealedBox(combined: data)
+            let data = try AES.GCM.open(sealedBox, using: key)
+            let decoded = try JSONDecoder().decode(T.self, from: data)
+            return decoded
         }
     }
     
@@ -58,10 +68,7 @@ class ChronoLockTests: XCTestCase {
     }
     
     func test_encryptAndDecrypt_withCodableObjectAndDifferentPassphrase_failsDecryption() throws {
-        struct AnyCodableObject: Codable {
-            let message: String
-        }
-        
+    
         let itemToEncrypt = AnyCodableObject(message: "any message")
     
         let sut1 = Encryptor(passphrase: "passphrase 1")
@@ -72,5 +79,24 @@ class ChronoLockTests: XCTestCase {
             let d: AnyCodableObject = try sut2.decrypt(encrypted)
             return d
         }())
+    }
+    
+    func test_encryptAndDecrypt_withCodableObjectAndSamePassphraseReturnsOriginalObject() throws {
+        
+        let itemToEncrypt = AnyCodableObject(message: "any message")
+        let uniquePassPhraseAcrossInstances = "unique passphrase across instances"
+        let sut1 = Encryptor(passphrase: uniquePassPhraseAcrossInstances)
+        let sut2 = Encryptor(passphrase: uniquePassPhraseAcrossInstances)
+        
+        let encrypted = try sut1.encrypt(itemToEncrypt)
+        let decrypted: AnyCodableObject = try sut2.decrypt(encrypted)
+        
+        XCTAssertEqual(decrypted, itemToEncrypt)
+    }
+}
+
+private extension ChronoLockTests {
+    struct AnyCodableObject: Codable, Equatable {
+        let message: String
     }
 }
