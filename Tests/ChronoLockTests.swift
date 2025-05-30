@@ -28,6 +28,10 @@ class ChronoLockTests: XCTestCase {
         func encrypt<T: Codable>(_ codableObject: T) throws -> Data {
             Data()
         }
+        
+        func decrypt<T>(_ data: Data) throws -> T {
+            throw NSError(domain: "any error", code: 0)
+        }
     }
     
     func test_encryptAndDecrypt_withSamePassphrase_returnsOriginalMessage() throws {
@@ -64,6 +68,9 @@ class ChronoLockTests: XCTestCase {
         let sut2 = Encryptor(passphrase: "passphrase 2")
         
         let encrypted = try sut1.encrypt(itemToEncrypt)
-        XCTAssertThrowsError(try sut2.decrypt(encrypted))
+        XCTAssertThrowsError(try {
+            let d: AnyCodableObject = try sut2.decrypt(encrypted)
+            return d
+        }())
     }
 }
