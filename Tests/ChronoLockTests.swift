@@ -4,42 +4,6 @@ import XCTest
 import ChronoLock
 
 class ChronoLockTests: XCTestCase {
-    struct ChronoLock {
-        protocol Encryptor {
-            func encrypt<T: Codable>(_ codableObject: T) throws -> Data
-        }
-        
-        protocol Decryptor {
-            func decrypt<T: Decodable>(_ data: Data) throws -> T
-        }
-        
-        struct AlreadyEllapsedDateError: Error {}
-        struct NonEllapsedDateError: Error {}
-        
-        let encryptor: Encryptor
-        let decryptor: Decryptor
-        let currentDate: () -> Date
-        
-        func encrypt(_ content: String, until date: Date) throws -> Data {
-            guard date > Date() else { throw AlreadyEllapsedDateError()}
-            let item = Item(unlockDate: date, content: content)
-            let encoded = try JSONEncoder().encode(item)
-            return try encryptor.encrypt(encoded)
-        }
-        
-        func decrypt(_ data: Data) throws -> String {
-            let decrypted: Item = try decryptor.decrypt(data)
-            guard decrypted.unlockDate <= currentDate() else {
-                throw NonEllapsedDateError()
-            }
-            return decrypted.content
-        }
-        
-        struct Item: Codable {
-            let unlockDate: Date
-            let content: String
-        }
-    }
     
     func test_encrypt_deliversErrorOnEncryptorError() throws {
         struct EncryptorStub: ChronoLock.Encryptor {
@@ -95,9 +59,9 @@ class ChronoLockTests: XCTestCase {
     
     func test_decrypt_deliversErrorOnNonEllapsedDate() throws {
         let timestamp = Date()
-        let nonEllapsedData = timestamp.adding(seconds: 1)
+        let nonEllapsedDate = timestamp.adding(seconds: 1)
         let sut = makeSUT(currentDate: { timestamp })
-        let encrypted = try sut.encrypt("any message to encrypt", until: nonEllapsedData)
+        let encrypted = try sut.encrypt("any message to encrypt", until: nonEllapsedDate)
         XCTAssertThrowsError(try sut.decrypt(encrypted)) { error in
             XCTAssertTrue(error is ChronoLock.NonEllapsedDateError)
         }
