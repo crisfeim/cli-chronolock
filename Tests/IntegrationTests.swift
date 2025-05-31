@@ -48,6 +48,9 @@ class IntegrationTests: XCTestCase {
         let decrypted = try String(data: Data(contentsOf: decryptedURL), encoding: .utf8)
         XCTAssertEqual(decrypted, content)
     }
+}
+
+private extension IntegrationTests {
     
     func makeSUT(currentDate: @escaping () -> Date = Date.init) -> ChronoLock {
         ChronoLock(
