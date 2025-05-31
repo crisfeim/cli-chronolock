@@ -35,14 +35,12 @@ public struct ChronoLock {
     
     public struct AlreadyEllapsedDateError: Error {}
     public struct NonEllapsedDateError: Error {}
-    public struct InvalidDataError: Error {
-        public init() {}
-    }
+    public struct InvalidDataError: Error {}
     
     let encryptor: Encryptor
     let decryptor: Decryptor
-    public let reader: Reader
-    public let persister: Persister
+    let reader: Reader
+    let persister: Persister
     let currentDate: () -> Date
     
     public init(encryptor: Encryptor, decryptor: Decryptor, reader: Reader, persister: Persister, currentDate: @escaping () -> Date) {
@@ -90,7 +88,6 @@ extension FileManager: ChronoLock.Reader {
 }
 
 extension FileManager: ChronoLock.Persister {
-    
     public func save(_ data: Data, at outputURL: URL) throws {
         try data.write(to: outputURL, options: .atomic)
     }
