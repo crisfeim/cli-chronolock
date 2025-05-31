@@ -3,8 +3,9 @@
 import ArgumentParser
 import Foundation
 
+
 @main
-struct ChronoLockCLI: ParsableCommand {
+public struct ChronoLockCLI: ParsableCommand {
     @Option(name: .shortAndLong, help: "Path to input file to encrypt")
     var input: String?
     
@@ -17,8 +18,11 @@ struct ChronoLockCLI: ParsableCommand {
     @Option(name: .shortAndLong, help: "Decrypt mode")
     var mode: Mode?
     
-    mutating func run() throws {
-        let system = makeChronoLock(passphrase: "some really long passphrase")
+    public var config: Config?
+    public init() {}
+    
+    public mutating func run() throws {
+        let system = Self.makeChronoLock(passphrase: "some really long passphrase", currentDate: config?.currentDate ?? Date.init)
         
         guard let output else {
             throw ValidationError("Missing output path")
@@ -37,6 +41,29 @@ struct ChronoLockCLI: ParsableCommand {
 }
 
 // MARK: - Helpers
+public enum DateParser {
+   public static func parse(_ string: String) throws -> Date {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "Europe/Madrid") ?? TimeZone(secondsFromGMT: 3600)
+        formatter.defaultDate = calendarMiddayReference()
+
+        guard let date = formatter.date(from: string) else {
+            throw ValidationError("Invalid date format. Use yyyy-MM-dd (e.g. 2025-04-30)")
+        }
+
+        return date
+    }
+
+    private static func calendarMiddayReference() -> Date {
+        var components = DateComponents()
+        components.hour = 12
+        components.minute = 0
+        components.second = 0
+        return Calendar(identifier: .gregorian).date(from: components) ?? Date()
+    }
+
+}
 private extension ChronoLockCLI {
     
     func handleDecryption(with system: ChronoLock, i inputPath: String, o outputPath: String) throws {
@@ -59,7 +86,7 @@ private extension ChronoLockCLI {
         guard let unlockDate else {
             throw ValidationError("Missing unlock date")
         }
-        let date = try parseDate(unlockDate)
+        let date = try DateParser.parse(unlockDate)
         try system.encryptAndSave(
             file: URL(fileURLWithPath: inputPath),
             until: date,
@@ -68,21 +95,13 @@ private extension ChronoLockCLI {
         print("🔒 Encrypted until \(date) at \(outputPath)")
     }
 
-    func parseDate(_ string: String) throws -> Date {
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: string) else {
-            throw ValidationError("Invalid date format. Use ISO8601.")
-        }
-        return date
-    }
-
-    func makeChronoLock(passphrase: String) -> ChronoLock {
+    static func makeChronoLock(passphrase: String, currentDate: @escaping () -> Date) -> ChronoLock {
         ChronoLock(
             encryptor: Encryptor(passphrase: passphrase),
             decryptor: Encryptor(passphrase: passphrase),
             reader: FileManager.default,
             persister: FileManager.default,
-            currentDate: Date.init
+            currentDate: currentDate
         )
     }
 }
@@ -95,4 +114,17 @@ extension ChronoLockCLI {
             self.init(rawValue: argument)
         }
     }
+    
+    public struct Config {
+        var currentDate: (() -> Date)?
+        public init(currentDate: (() -> Date)? = nil) {self.currentDate = currentDate}
+    }
+}
+
+
+extension ChronoLockCLI.Config: Decodable {
+    public init(from decoder: any Decoder) throws {
+        self = Self()
+    }
+    
 }
