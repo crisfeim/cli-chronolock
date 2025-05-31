@@ -62,13 +62,6 @@ private extension IntegrationTests {
         )
     }
     
-    func testPasswordTxtFileURL() -> URL {
-          Bundle.module.bundleURL
-            .appendingPathComponent("Contents/Resources")
-            .appendingPathComponent("test_files")
-            .appendingPathComponent("password.txt")
-      }
-    
     func makeTemporaryAleatoryURL() -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     }

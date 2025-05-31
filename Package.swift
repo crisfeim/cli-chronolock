@@ -18,6 +18,6 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
-        .testTarget(name: "ChronoLockTests", dependencies: ["ChronoLock"], resources: [.copy("test_files")])
+        .testTarget(name: "ChronoLockTests", dependencies: ["ChronoLock"])
     ]
 )
