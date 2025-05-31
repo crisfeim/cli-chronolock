@@ -1,17 +1,4 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
-// 
-// Swift Argument Parser
-// https://swiftpackageindex.com/apple/swift-argument-parser/documentation
-
-import ArgumentParser
-
-@main
-struct ChronoLockCLI: ParsableCommand {
-    mutating func run() throws {
-        print("Hello, world!")
-    }
-}
+// © 2025  Cristian Felipe Patiño Rojas. Created on 31/5/25.
 
 import Foundation
 
