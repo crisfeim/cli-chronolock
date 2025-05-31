@@ -1,6 +1,7 @@
 # ChronoLock
 
 ChronoLock is a command-line tool for encrypting plaintext files with a time-based lock. Files cannot be decrypted until a specific unlock date has been reached.
+Is designed as a personal commitment device: once locked, the file cannot be decrypted until the configured date has passed. Ideal for storing admin passwords, drafts, or time-sensitive notes you don’t want to access prematurely.
 
 ![](icon.png)
 
