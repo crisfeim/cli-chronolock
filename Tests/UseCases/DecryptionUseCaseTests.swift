@@ -30,8 +30,10 @@ extension ChronoLockTests {
         let sut = makeSUT(currentDate: { timestamp })
         let encrypted = try sut.encrypt("any message to encrypt", until: nonEllapsedDate)
         XCTAssertThrowsError(try sut.decrypt(encrypted)) { error in
-            XCTAssertEqual(error as? ChronoLock.Error, .nonEllapsedDate)
-            
+            switch (error as? ChronoLock.Error) {
+            case .nonEllapsedDate: break
+            default: XCTFail("Expected NonEllapsedDateError, got \(error) instead")
+            }
         }
     }
 }

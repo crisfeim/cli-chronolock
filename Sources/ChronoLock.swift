@@ -33,9 +33,9 @@ public struct ChronoLock {
         func save(_ content: String, at outputURL: URL) throws
     }
     
-    public enum Error: Swift.Error {
+    public enum Error: Swift.Error, Equatable {
         case alreadyEllapsedDate
-        case nonEllapsedDate
+        case nonEllapsedDate(TimeInterval)
         case invalidData
     }
     
@@ -54,15 +54,17 @@ public struct ChronoLock {
     }
     
    public func encrypt(_ content: String, until date: Date) throws -> Data {
-       guard date > Date() else { throw Error.alreadyEllapsedDate }
+       guard date > currentDate() else { throw Error.alreadyEllapsedDate }
         let item = Item(unlockDate: date, content: content)
         return try encryptor.encrypt(item)
     }
     
     public func decrypt(_ data: Data) throws -> String {
         let decrypted: Item = try decryptor.decrypt(data)
-        guard decrypted.unlockDate <= currentDate() else {
-            throw Error.nonEllapsedDate
+        let now = currentDate()
+        guard decrypted.unlockDate <= now else {
+            let remaining = decrypted.unlockDate.timeIntervalSince(now)
+            throw Error.nonEllapsedDate(remaining)
         }
         return decrypted.content
     }

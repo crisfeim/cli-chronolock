@@ -48,6 +48,21 @@ class IntegrationTests: XCTestCase {
         let decrypted = try String(data: Data(contentsOf: decryptedURL), encoding: .utf8)
         XCTAssertEqual(decrypted, content)
     }
+    
+    func test_decrypt_deliversRemainingCountOnNonEllapsedDate() throws {
+        let timestamp = Date()
+        let nonEllapsedDate = timestamp.adding(seconds: 1)
+        let sut = makeSUT(currentDate: { timestamp })
+        let encrypted = try sut.encrypt("any message to encrypt", until: nonEllapsedDate)
+        XCTAssertThrowsError(try sut.decrypt(encrypted)) { error in
+            switch (error as? ChronoLock.Error) {
+            case .nonEllapsedDate(let remainingTimeInterval):
+                let expectedTimeInterval = nonEllapsedDate.timeIntervalSince(timestamp)
+                XCTAssertEqual(remainingTimeInterval, expectedTimeInterval)
+            default: XCTFail("Expected NonEllapsedDateError, got \(error) instead")
+            }
+        }
+    }
 }
 
 private extension IntegrationTests {
