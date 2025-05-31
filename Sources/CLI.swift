@@ -21,6 +21,10 @@ public struct ChronoLockCLI: ParsableCommand {
     public var config: Config?
     public init() {}
     
+    public struct NonEllapsedDateError: Error {
+       public let message: String
+    }
+    
     public mutating func run() throws {
         let system = Self.makeChronoLock(passphrase: "some really long passphrase", currentDate: config?.currentDate ?? Date.init)
         
@@ -42,17 +46,33 @@ public struct ChronoLockCLI: ParsableCommand {
 
 // MARK: - Helpers
 public enum DateParser {
-   public static func parse(_ string: String) throws -> Date {
+    public static func parse(_ string: String) throws -> Date {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "Europe/Madrid") ?? TimeZone(secondsFromGMT: 3600)
-        formatter.defaultDate = calendarMiddayReference()
+        formatter.timeZone = TimeZone(identifier: "Europe/Madrid") ?? .current
 
         guard let date = formatter.date(from: string) else {
-            throw ValidationError("Invalid date format. Use yyyy-MM-dd (e.g. 2025-04-30)")
+            throw ValidationError("Invalid date format. Use yyyy-MM-dd")
         }
 
-        return date
+        let calendar = Calendar(identifier: .gregorian)
+        var components = calendar.dateComponents(in: formatter.timeZone!, from: date)
+        components.hour = 12
+        components.minute = 0
+        components.second = 0
+
+        return calendar.date(from: components)!
+    }
+    
+    public static func timeIntervalAsString( _ timeInterval: TimeInterval) -> String {
+        let totalSeconds = Int(timeInterval)
+        
+        let days = totalSeconds / 86400
+        let hours = (totalSeconds % 86400) / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+        
+        return String(format: "%02dd %02dh %02dm %02ds", days, hours, minutes, seconds)
     }
 
     private static func calendarMiddayReference() -> Date {
@@ -62,7 +82,12 @@ public enum DateParser {
         components.second = 0
         return Calendar(identifier: .gregorian).date(from: components) ?? Date()
     }
+}
 
+extension String {
+    public static func unreachedDate(_ remaining: String) -> String {
+        "Unlock date non reached. Remaining \(remaining)"
+    }
 }
 private extension ChronoLockCLI {
     
@@ -76,7 +101,8 @@ private extension ChronoLockCLI {
         } catch  {
             switch (error as? ChronoLock.Error) {
             case .nonEllapsedDate(let timeInterval):
-                throw ValidationError("Unlock date non reached. Remaining \(timeInterval)")
+                let formatted = DateParser.timeIntervalAsString(timeInterval)
+                throw NonEllapsedDateError(message: formatted)
             default: throw ValidationError("Decryption error")
             }
         }

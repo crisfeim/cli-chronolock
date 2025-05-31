@@ -3,7 +3,7 @@ import XCTest
 import ChronoLock
 
 class CLITests: XCTestCase {
-    func test_cliEncryptsAndDecryptsSuccessfully_givenControlledUnlockDate() throws {
+    func test_cliEncryptsAndDecryptsSucceeds_onEllapsedDate() throws {
         
         let inputURL = uniqueTemporaryURL()
         try "some secret content".write(to: inputURL, atomically: true, encoding: .utf8)
@@ -35,6 +35,39 @@ class CLITests: XCTestCase {
         XCTAssertEqual(try String(data: Data(contentsOf: decryptedURL), encoding: .utf8), "some secret content")
     }
     
+    func test_cliEncryptsAndDecryptsFailsReturningCorrectFormattedTimeInterval_onNonEllapsedUnlockDate() throws {
+        
+        let inputURL = uniqueTemporaryURL()
+        try "some secret content".write(to: inputURL, atomically: true, encoding: .utf8)
+
+        let outputURL = uniqueTemporaryURL()
+        let futureDate = "2025-06-01"
+
+        var sut = try ChronoLockCLI.parse([
+            "--input", inputURL.path,
+            "--output", outputURL.path,
+            "--mode", "encrypt",
+            "--unlock-date", futureDate
+        ])
+        
+        sut.config = ChronoLockCLI.Config(currentDate: { fixedNow() })
+        try sut.run()
+        
+        
+        let decryptedURL = uniqueTemporaryURL()
+        sut = try ChronoLockCLI.parse([
+            "--input", outputURL.path,
+            "--output", decryptedURL.path,
+            "--mode", "decrypt"
+        ])
+        sut.config = ChronoLockCLI.Config(currentDate: { fixedNow() })
+        
+        XCTAssertThrowsError(try sut.run()) { error in
+            
+            XCTAssertEqual((error as? ChronoLockCLI.NonEllapsedDateError)?.message, "01d 00h 00m 00s")
+        }
+    }
+    
     func uniqueTemporaryURL() -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     }
@@ -45,8 +78,14 @@ private func fixedNow() -> Date {
         timeZone: TimeZone(identifier: "Europe/Madrid"),
         year: 2025,
         month: 5,
-        day: 30,
+        day: 31,
         hour: 12,
         minute: 0
     ))!
+}
+
+private extension Date {
+    private func adding(days: Int) -> Date {
+        return Calendar(identifier: .gregorian).date(byAdding: .day, value: days, to: self)!
+    }
 }
