@@ -26,8 +26,7 @@ class CLITests: XCTestCase {
         var futureCLI = try ChronoLockCLI.parse([
             "--input", outputURL.path,
             "--output", decryptedURL.path,
-            "--mode", "decrypt",
-            "--unlock-date", futureDate
+            "--mode", "decrypt"
         ])
         
         futureCLI.config = ChronoLockCLI.Config(currentDate: { try! DateParser.parse(futureDate) })
