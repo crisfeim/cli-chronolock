@@ -26,7 +26,7 @@ class ChronoLockTests: XCTestCase {
         let sut = makeSUT(currentDate: {timestamp})
         
         XCTAssertThrowsError(try sut.encrypt("any message", until: alreadyEllapsedDate)) { error in
-            XCTAssertTrue(error is ChronoLock.AlreadyEllapsedDateError)
+            XCTAssertEqual(error as? ChronoLock.Error, .alreadyEllapsedDate)
         }
     }
     

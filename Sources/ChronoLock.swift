@@ -33,9 +33,11 @@ public struct ChronoLock {
         func save(_ content: String, at outputURL: URL) throws
     }
     
-    public struct AlreadyEllapsedDateError: Error {}
-    public struct NonEllapsedDateError: Error {}
-    public struct InvalidDataError: Error {}
+    public enum Error: Swift.Error {
+        case alreadyEllapsedDate
+        case nonEllapsedDate
+        case invalidData
+    }
     
     let encryptor: Encryptor
     let decryptor: Decryptor
@@ -52,7 +54,7 @@ public struct ChronoLock {
     }
     
    public func encrypt(_ content: String, until date: Date) throws -> Data {
-        guard date > Date() else { throw AlreadyEllapsedDateError()}
+       guard date > Date() else { throw Error.alreadyEllapsedDate }
         let item = Item(unlockDate: date, content: content)
         return try encryptor.encrypt(item)
     }
@@ -60,7 +62,7 @@ public struct ChronoLock {
     public func decrypt(_ data: Data) throws -> String {
         let decrypted: Item = try decryptor.decrypt(data)
         guard decrypted.unlockDate <= currentDate() else {
-            throw NonEllapsedDateError()
+            throw Error.nonEllapsedDate
         }
         return decrypted.content
     }
@@ -102,7 +104,7 @@ extension ChronoLock {
    public func encryptAndSave(file inputURL: URL, until date: Date, outputURL: URL) throws {
         let data = try reader.read(inputURL)
         guard let content = String(data: data, encoding: .utf8) else {
-            throw InvalidDataError()
+            throw Error.invalidData
         }
         let encrypted = try encrypt(content, until: date)
         try persister.save(encrypted, at: outputURL)
