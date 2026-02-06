@@ -1,5 +1,9 @@
 # ChronoLock
 
+![type: cli-tool](https://img.shields.io/badge/type-cli--tool-blue.svg)
+![CI](https://github.com/crisfeim/cli-bearpublish/actions/workflows/swift.yml/badge.svg)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/crisfeim/cli-chronolock)
+
 ChronoLock is a command-line tool for encrypting plaintext files with a time-based lock. Files cannot be decrypted until a specific unlock date has been reached.
 Is designed as a personal commitment device: once locked, the file cannot be decrypted until the configured date has passed. Ideal for storing admin passwords, drafts, or time-sensitive notes you don’t want to access prematurely.
 
